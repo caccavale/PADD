@@ -105,6 +105,14 @@ pihole_logo_script_retro_1="${red_text}.${yellow_text}-${green_text}.${blue_text
 pihole_logo_script_retro_2="${yellow_text}|${green_text}-${blue_text}'${magenta_text}. ${yellow_text}- ${blue_text}|${magenta_text}-${red_text}. ${green_text}.${blue_text}-${magenta_text}.${red_text}| ${green_text}.${blue_text}-${magenta_text},  ${reset_text}"
 pihole_logo_script_retro_3="${green_text}'  ${red_text}'   ${magenta_text}' ${yellow_text}'${green_text}-${blue_text}\`${magenta_text}-${red_text}'${yellow_text}'${green_text}-${blue_text}\`${magenta_text}'${red_text}-  ${reset_text}"
 
+# Whale logos
+whale_logo_1="${blue_text}     .-'${reset_text}                "
+whale_logo_2="${blue_text}'--./ /      _.---.${reset_text}     "
+whale_logo_3="${blue_text} '-,  (__..-\`       \\${reset_text}   "
+whale_logo_4="${blue_text}    \\          ${white_text}.${blue_text}     |${reset_text}  "
+whale_logo_5="${blue_text}     \`,.__.   ,__.--/${reset_text}   "
+whale_logo_6="${white_text}       '._${blue_text}/_.'${white_text}___.-\`${reset_text}    "
+
 ############################################# GETTERS ##############################################
 
 GetFTLData() {
@@ -1064,6 +1072,74 @@ NormalPADD() {
   done
 }
 
+DisplayWhale() {
+  for (( ; ; )); do
+
+    console_width=$(tput cols)
+    console_height=$(tput lines)
+
+    # Sizing Checks
+    SizeChecker
+
+    if [[ "$padd_size" != "regular" && "$padd_size" != "mega" ]]; then
+      echo "Whale mode only works on 80x25 character (or greater) terminals, sorry!"
+      exit 66;
+    fi
+    padd_size="regular"
+
+    # Get Config variables
+    . /etc/pihole/setupVars.conf
+
+    # Output everything to the screen
+    # PrintLogo
+    echo -e "${whale_logo_1}"
+    echo -e "${whale_logo_2}Pi-hole® ${core_version_heatmap}v${core_version}${reset_text}, Web ${web_version_heatmap}v${web_version}${reset_text}"
+    echo -e "${whale_logo_3}FTL ${ftl_version_heatmap}v${ftl_version}${reset_text}, PADD ${padd_version_heatmap}v${padd_version}${reset_text}"
+    echo -e "${whale_logo_4}$(echo ${full_status_} | sed "s/✓/${red_text}♥/g")${reset_text}"
+    echo -e "${whale_logo_5}"
+    echo -e "${whale_logo_6}"
+    echo ""
+    # end PrintLogo
+
+    # PrintPiholeInformation
+    echo "${bold_text}PI-HOLE ====================================================${reset_text}"
+    printf " %-10s${pihole_heatmap}%-19s${reset_text} %-10s${ftl_heatmap}%-19s${reset_text}\\n" "Status:" "${pihole_status}" "FTL:" "${ftl_status}"
+    # end PrintPiholeInformation
+
+    # PrintPiholeStats
+    printf " %-10s%-49s\\n" "Blocking:" "${domains_being_blocked} domains"
+    printf " %-10s[%-40s] %-5s\\n" "Pi-holed:" "${ads_blocked_bar}" "${ads_percentage_today}%"
+    printf " %-10s%-49s\\n" "Pi-holed:" "${ads_blocked_today} out of ${dns_queries_today} queries"
+    # end PrintPiholeStats
+
+    # PrintNetworkInformation
+    echo "${bold_text}NETWORK ====================================================${reset_text}"
+    printf " %-10s%-19s %-10s%-19s\\n" "Hostname:" "${full_hostname}" "IPv4:" "${IPV4_ADDRESS}"
+
+    if [[ "${DHCP_ACTIVE}" == "true" ]]; then
+      printf " %-10s%-19s %-10s${dhcp_heatmap}%-19s${reset_text}\\n" "DNS:" "${dns_information}" "DHCP:" "${dhcp_status}"
+      printf "%s\\n" "${dhcp_info}"
+    fi
+    # end PrintNetworkInformation
+
+    PrintSystemInformation ${padd_size} # Doesn't need changing
+
+    pico_status=${pico_status_ok}
+    mini_status_=${mini_status_ok}
+
+    # Start getting our information
+    GetVersionInformation ${padd_size}
+    GetPiholeInformation ${padd_size}
+    GetNetworkInformation ${padd_size}
+    GetSummaryInformation ${padd_size}
+    GetSystemInformation ${padd_size}
+
+    # Sleep for 5 seconds, then clear the screen
+    sleep 5
+    clear
+  done
+}
+
 DisplayHelp() {
   cat << EOM
 ::: PADD displays stats about your piHole!
@@ -1073,6 +1149,7 @@ DisplayHelp() {
 ::: Options:
 :::  -j, --json    output stats as JSON formatted string
 :::  -h, --help    display this help text
+:::  -w, --whale   replaces the PADD logo with a whale
 EOM
     exit 0
 }
@@ -1105,6 +1182,7 @@ for var in "$@"; do
   case "$var" in
     "-j" | "--json"  ) OutputJSON;;
     "-h" | "--help"  ) DisplayHelp;;
+    "-w" | "--whale" ) DisplayWhale;;
     *                ) exit 1;;
   esac
 done
